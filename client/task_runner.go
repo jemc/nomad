@@ -1073,12 +1073,8 @@ func (r *TaskRunner) run() {
 	}
 }
 
-// cleanup removes Consul entries and calls Driver.Cleanup when a task is
-// stopping. Errors are logged.
+// cleanup calls Driver.Cleanup when a task is stopping. Errors are logged.
 func (r *TaskRunner) cleanup() {
-	// Remove from Consul
-	r.consul.RemoveTask(r.alloc.ID, r.task)
-
 	drv, err := r.createDriver()
 	if err != nil {
 		r.logger.Printf("[ERR] client: error creating driver to cleanup resources: %v", err)
@@ -1451,6 +1447,9 @@ func (r *TaskRunner) updateServices(d driver.Driver, h driver.ScriptExecutor, ol
 // given limit. It returns whether the task was destroyed and the error
 // associated with the last kill attempt.
 func (r *TaskRunner) handleDestroy(handle driver.DriverHandle) (destroyed bool, err error) {
+	// Remove from Consul
+	r.consul.RemoveTask(r.alloc.ID, r.task)
+
 	// Cap the number of times we attempt to kill the task.
 	for i := 0; i < killFailureLimit; i++ {
 		if err = handle.Kill(); err != nil {
