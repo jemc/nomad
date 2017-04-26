@@ -29,6 +29,10 @@ import (
 )
 
 const (
+	// killPreDelay is the time to wait after deregistering the consul service
+	// before killing a task.
+	killPreDelay = 5 * time.Second
+
 	// killBackoffBaseline is the baseline time for exponential backoff while
 	// killing a task.
 	killBackoffBaseline = 5 * time.Second
@@ -1449,6 +1453,7 @@ func (r *TaskRunner) updateServices(d driver.Driver, h driver.ScriptExecutor, ol
 func (r *TaskRunner) handleDestroy(handle driver.DriverHandle) (destroyed bool, err error) {
 	// Remove from Consul
 	r.consul.RemoveTask(r.alloc.ID, r.task)
+	time.Sleep(time.Duration(killPreDelay))
 
 	// Cap the number of times we attempt to kill the task.
 	for i := 0; i < killFailureLimit; i++ {
