@@ -29,6 +29,10 @@ import (
 )
 
 const (
+	// killBackoffBaseline is the time to wait after deregistering the consul
+	// services for the task, before killing the task.
+	killPreDelay = 5 * time.Second
+
 	// killBackoffBaseline is the baseline time for exponential backoff while
 	// killing a task.
 	killBackoffBaseline = 5 * time.Second
@@ -1361,6 +1365,11 @@ func (r *TaskRunner) handleUpdate(update *structs.Allocation) error {
 // given limit. It returns whether the task was destroyed and the error
 // associated with the last kill attempt.
 func (r *TaskRunner) handleDestroy() (destroyed bool, err error) {
+	r.handle.PreKill()
+
+	// Sleep a few seconds, to allow the service deregistrations to propagate.
+	time.Sleep(time.Duration(killPreDelay))
+
 	// Cap the number of times we attempt to kill the task.
 	for i := 0; i < killFailureLimit; i++ {
 		if err = r.handle.Kill(); err != nil {

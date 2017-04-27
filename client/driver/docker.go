@@ -1265,6 +1265,15 @@ func (h *DockerHandle) Signal(s os.Signal) error {
 
 }
 
+// PreKill is used to deregister any associated consul services.
+func (h *DockerHandle) PreKill() error {
+	// Deregister associated consul services.
+	if err := h.executor.DeregisterServices(); err != nil {
+		h.logger.Printf("[ERR] driver.docker: error deregistering services: %v", err)
+	}
+	return nil
+}
+
 // Kill is used to terminate the task. This uses `docker stop -t killTimeout`
 func (h *DockerHandle) Kill() error {
 	// Stop the container
@@ -1307,11 +1316,6 @@ func (h *DockerHandle) run() {
 	}
 
 	close(h.doneCh)
-
-	// Remove services
-	if err := h.executor.DeregisterServices(); err != nil {
-		h.logger.Printf("[ERR] driver.docker: error deregistering services: %v", err)
-	}
 
 	// Shutdown the syslog collector
 	if err := h.executor.Exit(); err != nil {

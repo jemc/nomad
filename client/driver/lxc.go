@@ -366,6 +366,15 @@ func (h *lxcDriverHandle) ID() string {
 	return string(data)
 }
 
+// PreKill is used to deregister any associated consul services.
+func (h *lxcDriverHandle) PreKill() error {
+  // Deregister associated consul services.
+  if err := h.executor.DeregisterServices(); err != nil {
+    h.logger.Printf("[ERR] driver.docker: error deregistering services: %v", err)
+  }
+  return nil
+}
+
 func (h *lxcDriverHandle) WaitCh() chan *dstructs.WaitResult {
 	return h.waitCh
 }

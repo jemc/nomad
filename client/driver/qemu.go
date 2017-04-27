@@ -364,6 +364,15 @@ func (h *qemuHandle) Signal(s os.Signal) error {
 	return fmt.Errorf("Qemu driver can't send signals")
 }
 
+// PreKill is used to deregister any associated consul services.
+func (h *qemuHandle) PreKill() error {
+  // Deregister associated consul services.
+  if err := h.executor.DeregisterServices(); err != nil {
+    h.logger.Printf("[ERR] driver.docker: error deregistering services: %v", err)
+  }
+  return nil
+}
+
 // TODO: allow a 'shutdown_command' that can be executed over a ssh connection
 // to the VM
 func (h *qemuHandle) Kill() error {
@@ -401,11 +410,6 @@ func (h *qemuHandle) run() {
 		}
 	}
 	close(h.doneCh)
-
-	// Remove services
-	if err := h.executor.DeregisterServices(); err != nil {
-		h.logger.Printf("[ERR] driver.qemu: failed to deregister services: %v", err)
-	}
 
 	// Exit the executor
 	h.executor.Exit()

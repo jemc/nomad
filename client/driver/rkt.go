@@ -532,6 +532,15 @@ func (h *rktHandle) Signal(s os.Signal) error {
 	return fmt.Errorf("Rkt does not support signals")
 }
 
+// PreKill is used to deregister any associated consul services.
+func (h *rktHandle) PreKill() error {
+  // Deregister associated consul services.
+  if err := h.executor.DeregisterServices(); err != nil {
+    h.logger.Printf("[ERR] driver.docker: error deregistering services: %v", err)
+  }
+  return nil
+}
+
 // Kill is used to terminate the task. We send an Interrupt
 // and then provide a 5 second grace period before doing a Kill.
 func (h *rktHandle) Kill() error {
@@ -555,10 +564,6 @@ func (h *rktHandle) run() {
 		if e := killProcess(h.executorPid); e != nil {
 			h.logger.Printf("[ERROR] driver.rkt: error killing user process: %v", e)
 		}
-	}
-	// Remove services
-	if err := h.executor.DeregisterServices(); err != nil {
-		h.logger.Printf("[ERR] driver.rkt: failed to deregister services: %v", err)
 	}
 
 	// Exit the executor

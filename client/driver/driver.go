@@ -246,6 +246,9 @@ type DriverHandle interface {
 	// configurations.
 	Update(task *structs.Task) error
 
+  // PreKill is used to deregister the services
+  PreKill() error
+
 	// Kill is used to stop the task
 	Kill() error
 

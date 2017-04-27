@@ -394,6 +394,15 @@ func (h *javaHandle) Signal(s os.Signal) error {
 	return h.executor.Signal(s)
 }
 
+// PreKill is used to deregister any associated consul services.
+func (h *javaHandle) PreKill() error {
+  // Deregister associated consul services.
+  if err := h.executor.DeregisterServices(); err != nil {
+    h.logger.Printf("[ERR] driver.docker: error deregistering services: %v", err)
+  }
+  return nil
+}
+
 func (h *javaHandle) Kill() error {
 	if err := h.executor.ShutDown(); err != nil {
 		if h.pluginClient.Exited() {
@@ -434,11 +443,6 @@ func (h *javaHandle) run() {
 				h.logger.Printf("[ERR] driver.java: error killing user process: %v", e)
 			}
 		}
-	}
-
-	// Remove services
-	if err := h.executor.DeregisterServices(); err != nil {
-		h.logger.Printf("[ERR] driver.java: failed to kill the deregister services: %v", err)
 	}
 
 	// Exit the executor

@@ -246,15 +246,21 @@ func (h *mockDriverHandle) Signal(s os.Signal) error {
 
 // Kill kills a mock task
 func (h *mockDriverHandle) Kill() error {
-	h.logger.Printf("[DEBUG] driver.mock: killing task %q after kill timeout: %v", h.taskName, h.killTimeout)
-	select {
-	case <-h.doneCh:
-	case <-time.After(h.killAfter):
-		close(h.doneCh)
-	case <-time.After(h.killTimeout):
-		h.logger.Printf("[DEBUG] driver.mock: terminating task %q", h.taskName)
-		close(h.doneCh)
-	}
+  h.logger.Printf("[DEBUG] driver.mock: killing task %q after kill timeout: %v", h.taskName, h.killTimeout)
+  select {
+  case <-h.doneCh:
+  case <-time.After(h.killAfter):
+    close(h.doneCh)
+  case <-time.After(h.killTimeout):
+    h.logger.Printf("[DEBUG] driver.mock: terminating task %q", h.taskName)
+    close(h.doneCh)
+  }
+  return nil
+}
+
+// Kill kills a mock task
+func (h *mockDriverHandle) PreKill() error {
+	h.logger.Printf("[DEBUG] driver.mock: pre-killing task %q", h.taskName)
 	return nil
 }
 

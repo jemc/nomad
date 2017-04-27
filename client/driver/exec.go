@@ -264,6 +264,15 @@ func (h *execHandle) Signal(s os.Signal) error {
 	return h.executor.Signal(s)
 }
 
+// PreKill is used to deregister any associated consul services.
+func (h *execHandle) PreKill() error {
+  // Deregister associated consul services.
+  if err := h.executor.DeregisterServices(); err != nil {
+    h.logger.Printf("[ERR] driver.docker: error deregistering services: %v", err)
+  }
+  return nil
+}
+
 func (h *execHandle) Kill() error {
 	if err := h.executor.ShutDown(); err != nil {
 		if h.pluginClient.Exited() {
@@ -305,11 +314,6 @@ func (h *execHandle) run() {
 				h.logger.Printf("[ERR] driver.exec: destroying resource container failed: %v", e)
 			}
 		}
-	}
-
-	// Remove services
-	if err := h.executor.DeregisterServices(); err != nil {
-		h.logger.Printf("[ERR] driver.exec: failed to deregister services: %v", err)
 	}
 
 	// Exit the executor
